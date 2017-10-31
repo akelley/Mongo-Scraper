@@ -1,0 +1,71 @@
+body {
+	background-image: url("https://st.depositphotos.com/1032463/1373/i/950/depositphotos_13732950-stock-photo-background-of-old-vintage-newspapers.jpg");
+	background-size: 100%;
+  background-repeat: repeat-y;
+}
+
+.jumbotron {
+	background-color: DarkGrey;
+	border-bottom: 2px solid black;
+	padding: 0;
+	height: 75px;
+	margin: 0;
+}
+
+div.title, div.home, div.saved, div.scraped {
+	display: inline-block;
+	float: left;
+	text-align: left;
+}
+
+div.home, div.saved, div.scraped {
+	font-family: 'Ubuntu Mono', monospace;
+	font-size: 1.5em;
+	margin: 10px 0 0 40px;
+	padding: 10px;
+	background-color: yellow;
+	border: 1px dotted black;
+	border-radius: 10px;
+	box-shadow: 5px 5px grey;
+	cursor: pointer;
+}
+
+div.title {
+	margin: 5px 10px 0 100px;
+	font-family: 'Lato', sans-serif;
+	font-size: 3em;
+	font-weight: bolder;
+	color: black;
+  text-shadow: 1px 1px 2px DarkGrey, 0 0 25px yellow, 0 0 10px white;
+}
+
+.col-md-12 {
+	padding: 0;
+	margin: 0;
+}
+
+div#articles div {
+	display: block;
+	padding: 0px 10px;
+	background-color: white;
+	border: 1px solid black;
+	margin: 20px;
+	box-shadow: 5px 5px 5px black;
+	font-family: 'Ubuntu Mono', monospace;
+}
+
+div#articles div h3, div#articles div h5 {
+	margin: 5px;
+	padding: 0px;
+} 
+
+div#articles div button {
+	float: right;
+	border-radius: 10px;
+	background-color: ForestGreen;
+	font-size: .75em;
+}
+
+
+
+
