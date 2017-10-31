@@ -62,10 +62,38 @@ div#articles div h3, div#articles div h5 {
 div#articles div button {
 	float: right;
 	border-radius: 10px;
-	background-color: ForestGreen;
 	font-size: .75em;
 }
 
+div#articles div button.marksaved {
+	background-color: SpringGreen;
+}
 
+div#articles div button.markunsaved {
+	background-color: DeepPink;
+}
+
+div#articles div button.checknotes {
+	background-color: DeepSkyBlue;
+	margin-right: 5px;
+}
+
+.deletenote {
+	float: right;
+	margin-top: 2px;
+	margin-right: 2px;
+	border-radius: 50px;
+	font-weight: bolder;
+	color: black;
+}
+
+.articlenote {
+	display: block;
+	line-height: 2em;
+	margin: 5px;
+	border: 1px solid black;
+	border-radius: 5px;
+	font-family: 'Ubuntu Mono', monospace;
+}
 
 

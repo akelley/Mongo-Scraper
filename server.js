@@ -25,7 +25,6 @@ var Promise = require('bluebird');
 mongoose.Promise = Promise;
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 mongoose.connect(MONGODB_URI);
-var db = mongoose.connection;
 
 app.get("/", function(req, res) {
   res.render("index");
@@ -122,24 +121,41 @@ app.post("/markunsaved/:id", function(req, res) {
   });
 });
 
+app.get("/notes/:id", function(req, res) {
+  Note.find({ id: req.params.id }, function(error, dbNotes) {
+    if (error) {
+      console.log(error);
+    }
+    else {
+      res.json(dbNotes);
+    }
+  });
+});
 
+app.post("/notes", function(req, res) {
+  Note.create({	id: req.body.id,
+		body: req.body.body}, function(error, dbNote) {
+    if (error) {
+      console.log(error);
+    }
+    else {
+      res.json(dbNote);
+    }
+  });
+});
 
-
-
-// app.post("/articles/:id", function(req, res) {
-//   Note.create(req.body).then(function(dbNote) {
-//       // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
-//       // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
-//       // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-//       return Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
-//     })
-//     .then(function(dbArticle) {
-//       res.json(dbArticle);
-//     })
-//     .catch(function(err) {
-//       res.json(err);
-//     });
-// });
+app.post("/removenote/:id", function(req, res) {
+	console.log("help: " + req.params.body);
+	
+  Note.remove({	id: req.params.id}, function(error, dbNote) {
+    if (error) {
+      console.log(error);
+    }
+    else {
+      res.status(200).send("Deleted successful");
+    }
+  });
+});
 
 var PORT = process.env.PORT || 3000;
 app.listen(PORT, function(){
