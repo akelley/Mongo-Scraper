@@ -35,7 +35,7 @@ app.get("/scrape", function(req, res) {
 	var date = new Date();
 	var today = date.getDay();
 	
-	if(lastScraped != today){
+	// if(lastScraped != today){
 		request("http://www.nytimes.com", function(error, response, html) {
 		  var $ = cheerio.load(html);
 		  var results = [];
@@ -71,7 +71,7 @@ app.get("/scrape", function(req, res) {
 	      res.json(err);
 	    });
 		});
-	}
+	// }
 	else {
 		res.json(null);
 	}
