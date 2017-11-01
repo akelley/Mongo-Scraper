@@ -59,21 +59,21 @@ div#articles div h3, div#articles div h5 {
 	padding: 0px;
 } 
 
-div#articles div button {
+button {
 	float: right;
 	border-radius: 10px;
 	font-size: .75em;
 }
 
-div#articles div button.marksaved {
+button.save {
 	background-color: SpringGreen;
 }
 
-div#articles div button.markunsaved {
+button.unsave {
 	background-color: DeepPink;
 }
 
-div#articles div button.checknotes {
+button.checknotes {
 	background-color: DeepSkyBlue;
 	margin-right: 5px;
 }
@@ -96,4 +96,6 @@ div#articles div button.checknotes {
 	font-family: 'Ubuntu Mono', monospace;
 }
 
-
+.savenote {
+	margin-left: 5px;
+}

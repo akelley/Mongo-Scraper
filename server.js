@@ -13,151 +13,138 @@ var app = express();
 
 app.use(logger("dev"));
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({
-	extended: false
-}));
+app.use(bodyParser.urlencoded({	extended: false }));
 
 var exphbs = require("express-handlebars");
 app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 
-var Promise = require('bluebird');
 mongoose.Promise = Promise;
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 mongoose.connect(MONGODB_URI);
 
+
+// make dat connection
+var PORT = process.env.PORT || 3000;
+app.listen(PORT, function(){
+  console.log("App listening on port number " + PORT + "...");
+});
+
+
+// load index.handlebars file 
 app.get("/", function(req, res) {
   res.render("index");
 });
 
-var lastScraped = "";
+
+// main SCRAPE function
 app.get("/scrape", function(req, res) {
-	var date = new Date();
-	var today = date.getDay();
-	
-	if(lastScraped != today){
-		request("http://www.nytimes.com", function(error, response, html) {
-		  var $ = cheerio.load(html);
-		  var results = [];
+  var counter = 0;
+  request("http://www.nytimes.com", function(error, response, html) {
+    var $ = cheerio.load(html);
 
-	  	var lastScrapedDate = new Date();
-			lastScraped = lastScrapedDate.getDay();
+    $("article.story.theme-summary").each(function(i, element) {
+      var result = {};
 
-			$("article.story.theme-summary").each(function(i, element) {
-		  	var result = {};
-		    var headline = $(this).children(".story-heading").children("a").text().trim();
-		    var link = $(this).children(".story-heading").children("a").attr('href');
-		    var summary = $(this).children("p.summary").text().trim();
-		    var details = $(this).children("p.byline").text();
-		    
-		    if(headline && link && summary){
-		    	result.headline = headline;
-		    	result.link = link;
-		    	result.summary = summary;
-		    	result.saved = false;
-		    	
-		    	if(details){
-		    		result.details = details;
-		    	}
+      result.headline = $(this).children(".story-heading").children("a").text().trim();
+      result.link = $(this).children(".story-heading").children("a").attr('href');
+      result.summary = $(this).children("p.summary").text().trim();
+      result.details = $(this).children("p.byline").text();
+      result.saved = false;
 
-		    	results.push(result);
-		    }		
-		  });
-
-	    Article.create(results).then(function(dbArticles) {
-	      res.json(dbArticles);
-	    })
-	    .catch(function(err) {
-	      res.json(err);
-	    });
-		});
-	}
-	else {
-		res.json(null);
-	}
+      if(result.headline && result.link && result.summary){
+        counter++;
+        Article.create(result).then(function(dbArticle) {
+          res.send("Number of scraped articles: " + counter);
+        }).catch(function(err) {
+          res.json(err);
+        });
+      }
+    });
+    //console.log("Number of scraped articles: " + counter);
+  });
 });
 
+
+// get all UNSAVED articles
 app.get("/articles", function(req, res) {
   Article.find({ "saved": false }).then(function(dbArticles) {
-      res.json(dbArticles);
+    res.json(dbArticles);
+  })
+  .catch(function(err) {
+    res.json(err);
+  });
+});
+
+
+// get all SAVED articles
+app.get("/saved", function(req, res) {
+  Article.find({ "saved": true }).then(function(dbArticles) {
+    res.json(dbArticles);
+  })
+  .catch(function(err){
+    res.json(err);
+  });
+});
+
+
+// mark an article as SAVED
+app.post("/save/:id", function(req, res) {
+  Article.update({_id: req.params.id },{ $set: {saved: true}}).then(function(dbArticle) {
+    res.json(dbArticle);
+  })
+  .catch(function(err){
+    res.json(err);
+  });
+});
+
+
+// mark an article as UNSAVED
+app.post("/unsave/:id", function(req, res) {
+  Article.update({_id: req.params.id },{ $set: {saved: false}}).then(function(dbArticle) {
+    res.json(dbArticle);
+  })
+  .catch(function(err){
+    res.json(err);
+  });
+});
+
+
+// GET all NOTEs associated with an article
+app.get("/notes/:id", function(req, res) {
+  Article.find({ _id: req.params.id }).populate("notes")
+    .then(function(dbNotes) {
+      res.json(dbNotes);
     })
     .catch(function(err) {
       res.json(err);
     });
 });
 
-app.get("/saved", function(req, res) {
-  Article.find({ "saved": true }, function(error, dbArticles) {
-    if (error) {
-      console.log(error);
-    }
-    else {
-      res.json(dbArticles);
-    }
-  });
-});
 
-app.post("/marksaved/:id", function(req, res) {
-  Article.update({_id: req.params.id }, 
-  	{ $set: {saved: true}
+// CREATE a new NOTE
+app.post("/notes/:id", function(req, res) {
+  Note.create(req.body).then(function(dbNote) {
+    // If a Note was created successfully, find one User (there's only one) and push the new Note's _id to the User's `notes` array
+    // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
+    // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
+    return Article.findOneAndUpdate({ _id: req.params.id }, { $push: { notes: dbNote._id } }, { new: true });
   })
   .then(function(dbArticle) {
-      res.json(dbArticle);
-    })
-  .catch(function(err){
-      res.json(err);
-  });
-});
-
-app.post("/markunsaved/:id", function(req, res) {
-  Article.update({_id: req.params.id }, 
-  	{ $set: {saved: false}
+    res.json(dbArticle);
   })
-  .then(function(dbArticle) {
-      res.json(dbArticle);
-    })
-  .catch(function(err){
-      res.json(err);
+  .catch(function(err) {
+    res.json(err);
   });
 });
 
-app.get("/notes/:id", function(req, res) {
-  Note.find({ id: req.params.id }, function(error, dbNotes) {
-    if (error) {
-      console.log(error);
-    }
-    else {
-      res.json(dbNotes);
-    }
-  });
-});
 
-app.post("/notes", function(req, res) {
-  Note.create({	id: req.body.id,
-		body: req.body.body}, function(error, dbNote) {
-    if (error) {
-      console.log(error);
-    }
-    else {
-      res.json(dbNote);
-    }
+// DELETE note 
+app.post("/deletenote/:id", function(req, res) {
+  Note.remove({	_id: req.params.id}).then(function(dbNote) {
+    res.json(dbNote);
+  })
+  .catch(function(err) {
+    res.json(err);
   });
-});
-
-app.post("/removenote/:id", function(req, res) {
-	console.log("help: " + req.params.body);
-	
-  Note.remove({	id: req.params.id}, function(error, dbNote) {
-    if (error) {
-      console.log(error);
-    }
-    else {
-      res.status(200).send("Deleted successful");
-    }
-  });
-});
-
-var PORT = process.env.PORT || 3000;
-app.listen(PORT, function(){
-	console.log("App listening on port number " + PORT + "...");
 });

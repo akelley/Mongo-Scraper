@@ -24,8 +24,14 @@ var ArticleSchema = new Schema({
 
 	saved: {
 		type: Boolean
-	}
+	},
+
+	notes: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Note"
+    }
+  ]
 });
 
-var Article = mongoose.model("Article", ArticleSchema);
-module.exports = Article;
+module.exports = mongoose.model("Article", ArticleSchema);
